@@ -1,0 +1,128 @@
+<script>
+  // Consts
+  const toggler_switch = document.getElementById('toggle');
+  const btn_wpforms_next = document.querySelector('button.wpforms-page-button[data-page="2"]')
+  // Toggler Switcher functionalities
+  function btnToggleSwitcher(active_card, inactive_card) {
+    let activated_card = document.querySelector(`#${active_card}`);
+    let inactivated_card = document.querySelector(`#${inactive_card}`);
+    let wcbtn_activated = document.querySelector(`#${active_card} .wc_btn`);
+    let wcbtn_inactivated = document.querySelector(`#${inactive_card} .wc_btn`);
+
+    activated_card.style.display = 'block';
+    inactivated_card.style.display = 'none';
+
+    wcbtn_activated.classList.add('wc_active');
+    wcbtn_inactivated.classList.remove('wc_active');
+    wcbtn_inactivated.classList.add('wc_inactive');
+    wcbtn_activated.classList.remove('wc_inactive');
+
+    return true;
+  }
+
+  // Form Data Generetor
+  function createFormData(form_selector) {
+    const form = document.querySelector(form_selector);
+    const formData = new FormData(form);
+    // name
+    formData.set('name', formData.get('wpforms[fields][1]'));
+    formData.delete('wpforms[fields][1]');
+    // user
+    formData.set('user', formData.get('wpforms[fields][2]'));
+    formData.delete('wpforms[fields][2]');
+    // mail
+    formData.set('mail', formData.get('wpforms[fields][3]'));
+    formData.delete('wpforms[fields][3]');
+    // pass
+    formData.set('pass', formData.get('wpforms[fields][4]'));
+    formData.delete('wpforms[fields][4]');
+    // country
+    formData.set('country', formData.get('wpforms[fields][44]'));
+    formData.delete('wpforms[fields][44]');
+    // date
+    formData.set(
+      'date',
+      `${formData.get('wpforms[fields][35][date][y]')}-${formData.get(
+        'wpforms[fields][35][date][m]'
+      )}-${formData.get('wpforms[fields][35][date][d]')}`
+    );
+    formData.delete('wpforms[fields][35][date][y]');
+    formData.delete('wpforms[fields][35][date][m]');
+    formData.delete('wpforms[fields][35][date][d]');
+    // delete
+    formData.delete('wpforms[id]');
+    formData.delete('wpforms[nonce]');
+    formData.delete('wpforms[author]');
+    formData.delete('wpforms[post_id]');
+
+    return formData;
+  }
+
+  // URL to Data generator
+  function generateUrltoData(getted_url) {
+    let data_url = getted_url.substring(getted_url.indexOf('?') + 1);
+    data_url = new URLSearchParams(data_url);
+
+    return data_url;
+  }
+
+  // WC url data user from btn selector with product url generator
+  function getWcUrlData(form_selector, btn_selector) {
+    const form_data = createFormData(form_selector);
+    const form_params = new URLSearchParams();
+    for (const [key, value] of form_data) form_params.set(key, value);
+    const home_url = window.location.origin;
+
+    const wc_btn = document.querySelector(btn_selector);
+    const btn_url = generateUrltoData(wc_btn.href);
+    const product_id = btn_url.get('add-to-cart');
+    const wc_url = `${home_url}/finalizar-suscripciom/?add-to-cart=${product_id}&${form_params.toString()}`;
+
+    return wc_url;
+  }
+
+  // Validation to know if all ok to send to wc
+  function isValidSendToWC(url) {
+    data_url = generateUrltoData(url);
+
+    if (!data_url.get('add-to-cart')) return false;
+    if (!data_url.get('name')) return false;
+    if (!data_url.get('user')) return false;
+    if (!data_url.get('pass')) return false;
+    if (!data_url.get('mail')) return false;
+    if (!data_url.get('date')) return false;
+    if (!data_url.get('country')) return false;
+
+    return true;
+  }
+
+  // Started Page Listener
+  window.addEventListener('load', () => btnToggleSwitcher('card-night', 'card-day'));
+
+  // Next Btn consult data
+  btn_wpforms_next.addEventListener('click', () =>{
+    const activated_button = document.querySelector('.wc_active');
+    const inactivated_button = document.querySelector('.wc_inactive');
+    const wc_url_active = getWcUrlData('#wpforms-form-40462', '.wc_btn.wc_active');
+    const wc_url_inactive = getWcUrlData('#wpforms-form-40462', '.wc_btn.wc_inactive');
+    console.log('testeando');
+    // WC Btn Click Listener
+    if (!isValidSendToWC(wc_url_active)) return false;
+    if (!isValidSendToWC(wc_url_inactive)) return false;
+
+    activated_button.href = wc_url_active;
+    inactivated_button.href = wc_url_inactive;
+    console.log('OK');
+
+    return true;
+  });
+
+  // Toggler Btn Click Listener
+  toggler_switch.addEventListener('click',  () => {
+    if (toggler_switch.checked) {
+      btnToggleSwitcher('card-night', 'card-day');
+    } else {
+      btnToggleSwitcher('card-day', 'card-night');
+    }
+  });
+</script>
